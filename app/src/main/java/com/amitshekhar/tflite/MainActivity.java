@@ -22,9 +22,9 @@ import java.util.concurrent.Executors;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String MODEL_PATH = "redgreenapple.tflite";
+    private static final String MODEL_PATH = "maskmodel.tflite";
     private static final boolean QUANT = true;
-    private static final String LABEL_PATH = "apple.txt";
+    private static final String LABEL_PATH = "masklabels.txt";
     private static final int INPUT_SIZE = 224;
 
     private Classifier classifier;
