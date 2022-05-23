@@ -7,7 +7,9 @@ import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.wonderkiln.camerakit.CameraKitError;
 import com.wonderkiln.camerakit.CameraKitEvent;
@@ -34,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private Button btnDetectObject, btnToggleCamera;
     private ImageView imageViewResult;
     private CameraView cameraView;
+    private Switch btnAuto;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +49,8 @@ public class MainActivity extends AppCompatActivity {
 
         btnToggleCamera = findViewById(R.id.btnToggleCamera);
         btnDetectObject = findViewById(R.id.btnDetectObject);
+        btnAuto = findViewById(R.id.btnAuto);
+        btnAuto.setChecked(false);
 
         cameraView.addCameraKitListener(new CameraKitEventListener() {
             @Override
@@ -89,7 +94,36 @@ public class MainActivity extends AppCompatActivity {
         btnDetectObject.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cameraView.captureImage();
+                Thread thread=null;
+                if (btnAuto.isChecked())
+                {
+                    int timems=1000;//ms
+                    thread=new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            while(btnAuto.isChecked())
+                            {
+                                cameraView.captureImage();
+                               // Toast.makeText(MainActivity.this, "New Image", Toast.LENGTH_SHORT).show();
+                                try {
+                                    Thread.sleep(timems);
+                                } catch (InterruptedException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }
+                    });
+                    thread.start();
+                }
+                else
+                {
+                    if (thread!=null){
+                        thread.stop();
+                        thread=null;
+
+                    }
+                    cameraView.captureImage();
+                }
             }
         });
 
