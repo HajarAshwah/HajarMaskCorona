@@ -1,6 +1,8 @@
 package com.amitshekhar.tflite;
 
+import android.app.ProgressDialog;
 import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
@@ -11,6 +13,20 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.StorageTask;
+import com.google.firebase.storage.UploadTask;
 import com.wonderkiln.camerakit.CameraKitError;
 import com.wonderkiln.camerakit.CameraKitEvent;
 import com.wonderkiln.camerakit.CameraKitEventListener;
@@ -19,6 +35,7 @@ import com.wonderkiln.camerakit.CameraKitVideo;
 import com.wonderkiln.camerakit.CameraView;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -37,6 +54,8 @@ public class MainActivity extends AppCompatActivity {
     private ImageView imageViewResult;
     private CameraView cameraView;
     private Switch btnAuto;
+    private Uri downladuri;
+    private StorageTask<UploadTask.TaskSnapshot> uploadTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,17 +113,15 @@ public class MainActivity extends AppCompatActivity {
         btnDetectObject.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Thread thread=null;
-                if (btnAuto.isChecked())
-                {
-                    int timems=1000;//ms
-                    thread=new Thread(new Runnable() {
+                Thread thread = null;
+                if (btnAuto.isChecked()) {
+                    int timems = 1000;//ms
+                    thread = new Thread(new Runnable() {
                         @Override
                         public void run() {
-                            while(btnAuto.isChecked())
-                            {
+                            while (btnAuto.isChecked()) {
                                 cameraView.captureImage();
-                               // Toast.makeText(MainActivity.this, "New Image", Toast.LENGTH_SHORT).show();
+                                // Toast.makeText(MainActivity.this, "New Image", Toast.LENGTH_SHORT).show();
                                 try {
                                     Thread.sleep(timems);
                                 } catch (InterruptedException e) {
@@ -114,12 +131,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                     thread.start();
-                }
-                else
-                {
-                    if (thread!=null){
+                } else {
+                    if (thread != null) {
                         thread.stop();
-                        thread=null;
+                        thread = null;
 
                     }
                     cameraView.captureImage();
@@ -180,4 +195,56 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    //upload: 5
+    //upload: 5
+    private void uploadImage(Uri filePath) {
+
+        if (filePath != null) {
+            final ProgressDialog progressDialog = new ProgressDialog(this);
+            progressDialog.setTitle("Uploading...");
+            progressDialog.show();
+            FirebaseStorage storage = FirebaseStorage.getInstance();
+            StorageReference storageReference = storage.getReference();
+            final StorageReference ref = storageReference.child("images/" + UUID.randomUUID().toString());
+            uploadTask = ref.putFile(filePath)
+                    .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+
+                        @Override
+                        public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                            progressDialog.dismiss();
+                            ref.getDownloadUrl().addOnCompleteListener(new OnCompleteListener<Uri>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Uri> task) {
+                                    downladuri = task.getResult();
+                                    //t.setImage(downladuri.toString());
+                                    createTask(t);
+
+                                }
+                            });
+
+                            Toast.makeText(getApplicationContext(), "Uploaded", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            progressDialog.dismiss();
+                            Toast.makeText(getApplicationContext(), "Failed " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                        @Override
+                        public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                            double progress = (100.0 * taskSnapshot.getBytesTransferred() / taskSnapshot
+                                    .getTotalByteCount());
+                            progressDialog.setMessage("Uploaded " + (int) progress + "%");
+                        }
+                    });
+        } else {
+            t.setImage("");
+            createTask(t);
+        }
+    }
+
 }
