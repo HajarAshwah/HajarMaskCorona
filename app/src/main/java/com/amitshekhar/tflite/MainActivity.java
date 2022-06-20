@@ -4,7 +4,6 @@ import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.Button;
@@ -14,6 +13,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -218,7 +218,6 @@ public class MainActivity extends AppCompatActivity {
                                 public void onComplete(@NonNull Task<Uri> task) {
                                     downladuri = task.getResult();
                                     //t.setImage(downladuri.toString());
-                                    createTask(t);
 
                                 }
                             });
@@ -242,8 +241,8 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
         } else {
-            t.setImage("");
-            createTask(t);
+            //t.setImage("");
+
         }
     }
 
